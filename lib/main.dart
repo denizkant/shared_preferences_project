@@ -10,12 +10,16 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   late TextEditingController _usernameController;
+  late TextEditingController _passwordController;
+  bool passwordVisible = false;
   late bool _rememberMe;
 
   @override
   void initState() {
     super.initState();
     _usernameController = TextEditingController();
+    _passwordController = TextEditingController();
+    passwordVisible = true;
     _loadPreferences();
   }
 
@@ -24,6 +28,7 @@ class _MyAppState extends State<MyApp> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _usernameController.text = prefs.getString('username') ?? '';
+      _passwordController.text = prefs.getString('password') ?? '';
       _rememberMe = prefs.getBool('rememberMe') ?? false;
     });
   }
@@ -33,7 +38,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: Text('Shared Preferences Demo'),
+          title: Text('Shared Preferences'),
         ),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -42,13 +47,31 @@ class _MyAppState extends State<MyApp> {
               TextField(
                 controller: _usernameController,
                 decoration: InputDecoration(
-                  labelText: 'Username',
-                  hintText: 'Enter your username',
-                ),
-                onChanged: (value) {
-                  // No need to setState for TextField because we are using a TextEditingController
-                  debugPrint('------$value');
-                },
+                    labelText: 'Username',
+                    hintText: 'Enter your username',
+                    filled: true),
+                onChanged: (value) {},
+              ),
+              TextField(
+                controller: _passwordController,
+                obscureText: passwordVisible,
+                decoration: InputDecoration(
+                    labelText: 'Password',
+                    hintText: '********',
+                    alignLabelWithHint: false,
+                    filled: true,
+                    suffixIcon: IconButton(
+                      onPressed: () {
+                        setState(
+                          () {
+                            passwordVisible = !passwordVisible;
+                          },
+                        );
+                      },
+                      icon: Icon(passwordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off),
+                    )),
               ),
               CheckboxListTile(
                 title: Text('Remember me'),
@@ -62,9 +85,12 @@ class _MyAppState extends State<MyApp> {
               TextButton(
                 child: Text('Save'),
                 onPressed: () async {
-                  final prefs = await SharedPreferences.getInstance();
-                  prefs.setString('username', _usernameController.text);
-                  prefs.setBool('rememberMe', _rememberMe);
+                  if (_rememberMe) {
+                    final prefs = await SharedPreferences.getInstance();
+                    prefs.setString('username', _usernameController.text);
+                    prefs.setString('password', _passwordController.text);
+                    prefs.setBool('rememberMe', _rememberMe);
+                  }
                 },
               ),
             ],
